@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ショショクションクッションクッションゲーム</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f5f3ed;
+  color: #252525;
+  font-family: Arial, "Noto Sans JP", sans-serif;
+  text-align: center;
+  padding: 30px 16px;
+}
+
+.container {
+  max-width: 650px;
+  margin: auto;
+}
+
+h1 {
+  font-size: clamp(23px, 5vw, 34px);
+  line-height: 1.5;
+  margin: 12px 0;
+}
+
+.subtitle {
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.panel {
+  background: white;
+  border-radius: 20px;
+  padding: 24px 18px;
+  box-shadow: 0 4px 18px #0000000d;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 18px;
+  margin: 0 0 18px;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  text-align: left;
+}
+
+.rule {
+  background: #f7f7f7;
+  padding: 13px;
+  border-radius: 12px;
+  font-size: 17px;
+}
+
+.rule small {
+  display: block;
+  color: #777;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.star {
+  color: #d29a12;
+  font-weight: bold;
+}
+
+select {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  font-size: 17px;
+  margin: 5px 0 20px;
+}
+
+button {
+  border: none;
+  border-radius: 14px;
+  padding: 16px 30px;
+  font-size: 19px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform .1s, opacity .1s;
+}
+
+button:active {
+  transform: scale(.96);
+}
+
+.generate {
+  width: 100%;
+  max-width: 300px;
+  color: white;
+  background: #343434;
+}
+
+.result {
+  min-height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 20px 8px;
+  overflow-wrap: anywhere;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f3ef;
+  border-radius: 12px;
+  padding: 9px;
+  font-size: clamp(23px, 5vw, 35px);
+  min-width: 48px;
+  min-height: 52px;
+}
+
+.token.last {
+  background: #fff0bd;
+  outline: 2px solid #e6b83c;
+}
+
+.count {
+  font-size: 14px;
+  color: #777;
+  margin-top: 8px;
+}
+
+.words {
+  font-size: 19px;
+  line-height: 2;
+  overflow-wrap: anywhere;
+  margin-top: 15px;
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  color: #999;
+  font-size: 12px;
+  margin-top: 30px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1>ショショクションクッションクッションゲーム</h1>
+  <div class="subtitle">絵文字をランダム生成しよう！</div>
+
+  <section class="panel">
+    <h2>📖 ルール</h2>
+
+    <div class="rules">
+
+      <div class="rule">
+        🐟️ → クション<span class="star">*</span>
+      </div>
+
+      <div class="rule">
+        🛋️ → クッション<span class="star">*</span>
+      </div>
+
+      <div class="rule">
+        📕 → ショ
+      </div>
+
+      <div class="rule">
+        9️⃣ → ク
+      </div>
+
+      <div class="rule" style="grid-column:1 / -1">
+        🐟️−9️⃣ → ション<span class="star">*</span>
+        <small>🐟️−9️⃣の組み合わせは1カウント！</small>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>🎲 長さを選択</h2>
+
+    <select id="length">
+      <option value="3,5">3〜5</option>
+      <option value="5,10">5〜10</option>
+      <option value="10,20">10〜20</option>
+      <option value="30,35">30〜35</option>
+    </select>
+
+    <br>
+
+    <button class="generate" onclick="generate()">
+      🎲 生成！
+    </button>
+  </section>
+
+  <section class="panel">
+    <h2>✨ 生成結果</h2>
+
+    <div id="placeholder" style="color:#aaa;padding:25px 0">
+      「生成！」を押してね
+    </div>
+
+    <div id="result" class="result hidden"></div>
+
+    <div id="count" class="count"></div>
+
+    <div id="words" class="words"></div>
+  </section>
+
+  <footer>
+    ショショクションクッションクッションゲーム Web版
+  </footer>
+
+</div>
+
+<script>
+
+// 生成するパーツ
+const items = [
+  {
+    emoji: "🐟️",
+    word: "クション",
+    star: true
+  },
+  {
+    emoji: "🛋️",
+    word: "クッション",
+    star: true
+  },
+  {
+    emoji: "📕",
+    word: "ショ",
+    star: false
+  },
+  {
+    emoji: "9️⃣",
+    word: "ク",
+    star: false
+  },
+  {
+    emoji: "🐟️−9️⃣",
+    word: "ション",
+    star: true
+  }
+];
+
+// ランダムに選ぶ関数
+function randomItem(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+// 生成処理
+function generate() {
+
+  // 選択された長さを取得
+  const range = document
+    .getElementById("length")
+    .value.split(",");
+
+  const min = Number(range[0]);
+  const max = Number(range[1]);
+
+  // 指定範囲内でランダムに長さを決定
+  const length =
+    Math.floor(Math.random() * (max - min + 1)) + min;
+
+  const result = [];
+
+  // 最後以外をランダム生成
+  for (let i = 0; i < length - 1; i++) {
+    result.push(randomItem(items));
+  }
+
+  // 最後は必ず*付きのパーツ
+  const lastItems = items.filter(item => item.star);
+
+  result.push(randomItem(lastItems));
+
+  // 表示エリア取得
+  const resultArea = document.getElementById("result");
+  const wordsArea = document.getElementById("words");
+
+  document
+    .getElementById("placeholder")
+    .classList.add("hidden");
+
+  resultArea.classList.remove("hidden");
+
+  // 絵文字を表示
+  resultArea.innerHTML = result.map((item, index) => {
+
+    const lastClass =
+      index === result.length - 1 ? "last" : "";
+
+    return `
+      <span class="token ${lastClass}">
+        ${item.emoji}
+      </span>
+    `;
+
+  }).join("");
+
+  // 文章には*を付けない
+  wordsArea.textContent = result
+    .map(item => item.word)
+    .join("");
+
+  // 個数表示
+  document.getElementById("count").textContent =
+    "絵文字の数：" + length +
+    "個（🐟️−9️⃣は1カウント）";
+
+}
+
+</script>
+
+</body>
+</html>
